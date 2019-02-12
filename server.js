@@ -4,7 +4,8 @@ let bodyParser = require("body-parser")
 let app = express()
 app.use(cors())
 app.use(bodyParser.raw({ type: "*/*" }))
-
+const MongoClient = require("mongodb").MongoClient
+const url = "mongodb://admin:admin123@ds225375.mlab.com:25375/mydb"
 let genarateId = function() {
   return "" + Math.floor(Math.random() * 100000000)
 }
@@ -12,12 +13,42 @@ let genarateId = function() {
 let passwords = {}
 let sessions = {}
 
-app.post("/login", function(req, res) {
+app.post("/signup", function(req, res) {
+  console.log("**** inside in the signup endpoint")
+  //console.log("bofore paresd :", req.parse.toString())
   let body = JSON.parse(req.body)
-  let userName = body.userName
+  MongoClient.connect(url, (err, db) => {
+    if (err) throw err
+    let dbo = db.db("mydb")
+    dbo.collection("body").insertOne(body, (err, result) => {
+      if (err) throw err
+      console.log("success")
+      let response = {
+        status: true,
+        message: "successfuly insert data"
+      }
+      db.close()
+      res.send(JSON.stringify({ response }))
+    })
+  })
+  //   console.log("parsed body :", body)
+  //   let userName = body.username
+  //   let enteredPassword = body.password
+  //   passwords[userName] = enteredPassword
+  //   console.log("passwords", passwords)
+  //   res.send(JSON.stringify({ success: true }))
+})
+
+app.post("/login", function(req, res) {
+  console.log("**** inside in the login endpoint")
+  //console.log("bofore paresd :", req.parse.toString())
+  let body = JSON.parse(req.body)
+  console.log("parsed body :", body)
+  let userName = body.username
   let enteredPassword = body.password
   let actualPassword = passwords[userName]
   if (enteredPassword === actualPassword) {
+    console.log("password matched")
     let sessionId = genarateId()
     res.send(JSON.stringify({ success: true, sid: sessionId }))
     return
@@ -25,6 +56,6 @@ app.post("/login", function(req, res) {
   res.send(JSON.stringify({ success: false }))
 })
 
-app.listen(4000, function() {
-  console.log("Server started on port 4000")
+app.listen(80, function() {
+  console.log("Server started on port 80")
 })
