@@ -15,7 +15,6 @@ let sessions = {}
 
 app.post("/signup", function(req, res) {
   console.log("**** inside in the signup endpoint")
-  //console.log("bofore paresd :", req.parse.toString())
   let body = JSON.parse(req.body)
   MongoClient.connect(url, (err, db) => {
     if (err) throw err
@@ -31,28 +30,42 @@ app.post("/signup", function(req, res) {
       res.send(JSON.stringify({ response }))
     })
   })
-  //   console.log("parsed body :", body)
-  //   let userName = body.username
-  //   let enteredPassword = body.password
-  //   passwords[userName] = enteredPassword
-  //   console.log("passwords", passwords)
-  //   res.send(JSON.stringify({ success: true }))
 })
 
 app.post("/login", function(req, res) {
   console.log("**** inside in the login endpoint")
-  //console.log("bofore paresd :", req.parse.toString())
   let body = JSON.parse(req.body)
-  console.log("parsed body :", body)
-  let userName = body.username
-  let enteredPassword = body.password
-  let actualPassword = passwords[userName]
-  if (enteredPassword === actualPassword) {
-    console.log("password matched")
-    let sessionId = genarateId()
-    res.send(JSON.stringify({ success: true, sid: sessionId }))
-    return
-  }
+  let search = req.query.search
+  MongoClient.connect(url, (err, db) => {
+    if (err) throw err
+    let dbo = db.db("mydb")
+    let query = {
+      username: search
+    }
+    dbo
+      .collection("body")
+      .find(query)
+      .toArray((err, result) => {
+        if (err) throw err
+        console.log("result", result)
+        let response = {
+          status: true,
+          password: result
+        }
+        db.close()
+        res.send(JSON.stringify(response))
+      })
+  })
+  // console.log("parsed body :", body)
+  // let userName = body.username
+  // let enteredPassword = body.password
+  // let actualPassword = passwords[userName]
+  // if (enteredPassword === actualPassword) {
+  //   console.log("password matched")
+  //   let sessionId = genarateId()
+  //   res.send(JSON.stringify({ success: true, sid: sessionId }))
+  //   return
+  // }
   res.send(JSON.stringify({ success: false }))
 })
 
