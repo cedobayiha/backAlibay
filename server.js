@@ -35,23 +35,36 @@ app.post("/signup", function(req, res) {
 app.post("/login", function(req, res) {
   console.log("**** inside in the login endpoint")
   let body = JSON.parse(req.body)
-  let search = req.query.search
+  // let search = body.query.search
+  console.log("search", body)
+  let userName = body.username
+  let enteredPassword = body.password
+  console.log("username: ", userName)
+  console.log("password: ", enteredPassword)
   MongoClient.connect(url, (err, db) => {
     if (err) throw err
     let dbo = db.db("mydb")
     let query = {
-      username: search
+      username: userName,
+      password: enteredPassword
     }
+    console.log("query", query)
     dbo
       .collection("body")
       .find(query)
       .toArray((err, result) => {
         if (err) throw err
         console.log("result", result)
+        if (result.length === 0) {
+          console.log("password didn't match!!")
+          res.send(JSON.stringify({ success: false }))
+          return
+        }
         let response = {
           status: true,
-          password: result
+          sid: genarateId()
         }
+        console.log("response: ", response)
         db.close()
         res.send(JSON.stringify(response))
       })
@@ -66,7 +79,7 @@ app.post("/login", function(req, res) {
   //   res.send(JSON.stringify({ success: true, sid: sessionId }))
   //   return
   // }
-  res.send(JSON.stringify({ success: false }))
+  //   res.send(JSON.stringify({ success: false }))
 })
 
 app.listen(80, function() {
